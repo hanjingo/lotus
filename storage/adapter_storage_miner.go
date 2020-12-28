@@ -30,6 +30,7 @@ import (
 
 var _ sealing.SealingAPI = new(SealingAPIAdapter)
 
+// 密封api封装类
 type SealingAPIAdapter struct {
 	delegate storageMinerApi
 }

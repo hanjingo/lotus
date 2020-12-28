@@ -19,6 +19,7 @@ type addrSelectApi interface {
 	StateLookupID(context.Context, address.Address, types.TipSetKey) (address.Address, error)
 }
 
+// 地址选择器
 type AddressSelector struct {
 	api.AddressConfig
 }

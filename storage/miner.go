@@ -41,34 +41,50 @@ import (
 var log = logging.Logger("storageminer")
 
 type Miner struct {
+	// 存储api
 	api     storageMinerApi
+	// 小费配置
 	feeCfg  config.MinerFeeConfig
+	// 主机地址
 	h       host.Host
+	// 扇区管理器
 	sealer  sectorstorage.SectorManager
+	// 
 	ds      datastore.Batching
+	// 扇区统计器(用来找到下一个扇区)
 	sc      sealing.SectorIDCounter
+	// 验证器
 	verif   ffiwrapper.Verifier
+	// 地址选择器
 	addrSel *AddressSelector
-
+	// 地址(实际为struct包一层string)
 	maddr address.Address
-
+	// 获得密封配置函数
 	getSealConfig dtypes.GetSealingConfigFunc
+	// 密封器
 	sealing       *sealing.Sealing
-
+	// 
 	sealingEvtType journal.EventType
-
+	// 
 	journal journal.Journal
 }
 
 // SealingStateEvt is a journal event that records a sector state transition.
+// 密封状态事件
 type SealingStateEvt struct {
+	// 扇区号
 	SectorNumber abi.SectorNumber
+	// 密封证明协议类型
 	SectorType   abi.RegisteredSealProof
+	// 扇区状态(变更前)
 	From         sealing.SectorState
+	// 扇区状态(变更后)
 	After        sealing.SectorState
+	// 错误信息
 	Error        string
 }
 
+// 矿机存储api
 type storageMinerApi interface {
 	// Call a read only method on actors (no interaction with the chain required)
 	StateCall(context.Context, *types.Message, types.TipSetKey) (*api.InvocResult, error)
@@ -115,6 +131,7 @@ type storageMinerApi interface {
 	WalletHas(context.Context, address.Address) (bool, error)
 }
 
+// 新建矿机
 func NewMiner(api storageMinerApi, maddr address.Address, h host.Host, ds datastore.Batching, sealer sectorstorage.SectorManager, sc sealing.SectorIDCounter, verif ffiwrapper.Verifier, gsd dtypes.GetSealingConfigFunc, feeCfg config.MinerFeeConfig, journal journal.Journal, as *AddressSelector) (*Miner, error) {
 	m := &Miner{
 		api:     api,
@@ -135,6 +152,7 @@ func NewMiner(api storageMinerApi, maddr address.Address, h host.Host, ds datast
 	return m, nil
 }
 
+// 跑起来
 func (m *Miner) Run(ctx context.Context) error {
 	if err := m.runPreflightChecks(ctx); err != nil {
 		return xerrors.Errorf("miner preflight checks failed: %w", err)
@@ -146,8 +164,8 @@ func (m *Miner) Run(ctx context.Context) error {
 	}
 
 	fc := sealing.FeeConfig{
-		MaxPreCommitGasFee: abi.TokenAmount(m.feeCfg.MaxPreCommitGasFee),
-		MaxCommitGasFee:    abi.TokenAmount(m.feeCfg.MaxCommitGasFee),
+		MaxPreCommitGasFee: abi.TokenAmount(m.feeCfg.MaxPreCommitGasFee), 	// 每次提交时产生的gas费用
+		MaxCommitGasFee:    abi.TokenAmount(m.feeCfg.MaxCommitGasFee), 		// 最大提交gas费用
 	}
 
 	evts := events.NewEvents(ctx, m.api)
@@ -166,6 +184,7 @@ func (m *Miner) Run(ctx context.Context) error {
 	return nil
 }
 
+// 密封通知回调
 func (m *Miner) handleSealingNotifications(before, after sealing.SectorInfo) {
 	m.journal.RecordEvent(m.sealingEvtType, func() interface{} {
 		return SealingStateEvt{
@@ -178,10 +197,12 @@ func (m *Miner) handleSealingNotifications(before, after sealing.SectorInfo) {
 	})
 }
 
+// 停止运行
 func (m *Miner) Stop(ctx context.Context) error {
 	return m.sealing.Stop(ctx)
 }
 
+// run之前检查；设置矿工key，检查钱包是否存在
 func (m *Miner) runPreflightChecks(ctx context.Context) error {
 	mi, err := m.api.StateMinerInfo(ctx, m.maddr, types.EmptyTSK)
 	if err != nil {
@@ -240,6 +261,7 @@ func NewWinningPoStProver(api api.FullNode, prover storage.Prover, verifier ffiw
 
 var _ gen.WinningPoStProver = (*StorageWpp)(nil)
 
+// 产生候选者
 func (wpp *StorageWpp) GenerateCandidates(ctx context.Context, randomness abi.PoStRandomness, eligibleSectorCount uint64) ([]uint64, error) {
 	start := build.Clock.Now()
 
@@ -251,6 +273,7 @@ func (wpp *StorageWpp) GenerateCandidates(ctx context.Context, randomness abi.Po
 	return cds, nil
 }
 
+// 计算证明 rand:随机数组
 func (wpp *StorageWpp) ComputeProof(ctx context.Context, ssi []builtin.SectorInfo, rand abi.PoStRandomness) ([]builtin.PoStProof, error) {
 	if build.InsecurePoStValidation {
 		return []builtin.PoStProof{{ProofBytes: []byte("valid proof")}}, nil

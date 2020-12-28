@@ -17,6 +17,7 @@ import (
 	"github.com/filecoin-project/lotus/genesis"
 )
 
+// 密封预处理； spt:密封算法, maddr:地址, sectors:扇区数量
 func PreSeal(spt abi.RegisteredSealProof, maddr address.Address, sectors int) (*genesis.Miner, *types.KeyInfo, error) {
 	k, err := wallet.GenerateKey(types.KTBLS)
 	if err != nil {

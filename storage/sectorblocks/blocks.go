@@ -48,10 +48,11 @@ func DsKeyToDealID(key datastore.Key) (uint64, error) {
 	return dealID, nil
 }
 
+// 扇区块容器
 type SectorBlocks struct {
-	*storage.Miner
+	*storage.Miner // 矿机
 
-	keys  datastore.Batching
+	keys  datastore.Batching // key集合
 	keyLk sync.Mutex
 }
 
