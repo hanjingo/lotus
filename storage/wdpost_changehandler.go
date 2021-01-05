@@ -15,17 +15,26 @@ import (
 
 const SubmitConfidence = 4
 
+// 创建Post完成回调
 type CompleteGeneratePoSTCb func(posts []miner.SubmitWindowedPoStParams, err error)
+
+// 提交post完成回调
 type CompleteSubmitPoSTCb func(err error)
 
 type changeHandlerAPI interface {
+	// 获得矿机完成证明的截止时间
 	StateMinerProvingDeadline(context.Context, address.Address, types.TipSetKey) (*dline.Info, error)
+	// 开始创建Post
 	startGeneratePoST(ctx context.Context, ts *types.TipSet, deadline *dline.Info, onComplete CompleteGeneratePoSTCb) context.CancelFunc
+	// 开始提交Post; ts: , deadline: 截至信息, posts:Post参数, onComplete:完成提交Post回调
 	startSubmitPoST(ctx context.Context, ts *types.TipSet, deadline *dline.Info, posts []miner.SubmitWindowedPoStParams, onComplete CompleteSubmitPoSTCb) context.CancelFunc
+	// 中断回调; ts:标签集合, deadline:截止日期
 	onAbort(ts *types.TipSet, deadline *dline.Info)
+	// Post失败; ts:标签集合，deadline:截至时间信息
 	failPost(err error, ts *types.TipSet, deadline *dline.Info)
 }
 
+// 矿机状态变更回调
 type changeHandler struct {
 	api        changeHandlerAPI
 	actor      address.Address
@@ -41,10 +50,11 @@ func newChangeHandler(api changeHandlerAPI, actor address.Address) *changeHandle
 }
 
 func (ch *changeHandler) start() {
-	go ch.proveHdlr.run()
-	go ch.submitHdlr.run()
+	go ch.proveHdlr.run()  // 证明回调器跑起来
+	go ch.submitHdlr.run() // 提交回调器跑起来
 }
 
+//
 func (ch *changeHandler) update(ctx context.Context, revert *types.TipSet, advance *types.TipSet) error {
 	// Get the current deadline period
 	di, err := ch.api.StateMinerProvingDeadline(ctx, ch.actor, advance.Key())
@@ -52,7 +62,7 @@ func (ch *changeHandler) update(ctx context.Context, revert *types.TipSet, advan
 		return err
 	}
 
-	if !di.PeriodStarted() {
+	if !di.PeriodStarted() { // 证明截至计时器还没开始
 		return nil // not proving anything yet
 	}
 
@@ -62,7 +72,7 @@ func (ch *changeHandler) update(ctx context.Context, revert *types.TipSet, advan
 		advance: advance,
 		di:      di,
 	}
-
+	// 为什么要select 2次?
 	select {
 	case ch.proveHdlr.hcs <- hc:
 	case <-ch.proveHdlr.shutdownCtx.Done():
@@ -78,16 +88,19 @@ func (ch *changeHandler) update(ctx context.Context, revert *types.TipSet, advan
 	return nil
 }
 
+// 关闭
 func (ch *changeHandler) shutdown() {
-	ch.proveHdlr.shutdown()
-	ch.submitHdlr.shutdown()
+	ch.proveHdlr.shutdown()  // 关闭证明器
+	ch.submitHdlr.shutdown() // 提交回调器
 }
 
+// 返回当前的标签集合以及截至时间信息
 func (ch *changeHandler) currentTSDI() (*types.TipSet, *dline.Info) {
 	return ch.submitHdlr.currentTSDI()
 }
 
 // postsCache keeps a cache of PoSTs for each proving window
+// post缓存器; 默认缓存器的容量为16;
 type postsCache struct {
 	added chan *postInfo
 	lk    sync.RWMutex
@@ -497,11 +510,13 @@ func (s *submitHandler) processSubmitResult(res *submitResult) {
 	res.pw.submitState = SubmitStateComplete
 }
 
+// 标签集合+截至时间信息
 type tsdi struct {
 	ts *types.TipSet
 	di *dline.Info
 }
 
+// 当前的标签集合截至时间信息
 func (s *submitHandler) currentTSDI() (*types.TipSet, *dline.Info) {
 	out := make(chan *tsdi)
 	s.getTSDIReq <- out

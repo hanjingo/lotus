@@ -39,6 +39,7 @@ func NewSealingAPIAdapter(api storageMinerApi) SealingAPIAdapter {
 	return SealingAPIAdapter{delegate: api}
 }
 
+//
 func (s SealingAPIAdapter) StateMinerSectorSize(ctx context.Context, maddr address.Address, tok sealing.TipSetToken) (abi.SectorSize, error) {
 	// TODO: update storage-fsm to just StateMinerInfo
 	mi, err := s.StateMinerInfo(ctx, maddr, tok)
@@ -48,6 +49,7 @@ func (s SealingAPIAdapter) StateMinerSectorSize(ctx context.Context, maddr addre
 	return mi.SectorSize, nil
 }
 
+//
 func (s SealingAPIAdapter) StateMinerPreCommitDepositForPower(ctx context.Context, a address.Address, pci miner.SectorPreCommitInfo, tok sealing.TipSetToken) (big.Int, error) {
 	tsk, err := types.TipSetKeyFromBytes(tok)
 	if err != nil {
@@ -57,6 +59,7 @@ func (s SealingAPIAdapter) StateMinerPreCommitDepositForPower(ctx context.Contex
 	return s.delegate.StateMinerPreCommitDepositForPower(ctx, a, pci, tsk)
 }
 
+//
 func (s SealingAPIAdapter) StateMinerInitialPledgeCollateral(ctx context.Context, a address.Address, pci miner.SectorPreCommitInfo, tok sealing.TipSetToken) (big.Int, error) {
 	tsk, err := types.TipSetKeyFromBytes(tok)
 	if err != nil {
@@ -66,6 +69,7 @@ func (s SealingAPIAdapter) StateMinerInitialPledgeCollateral(ctx context.Context
 	return s.delegate.StateMinerInitialPledgeCollateral(ctx, a, pci, tsk)
 }
 
+//
 func (s SealingAPIAdapter) StateMinerInfo(ctx context.Context, maddr address.Address, tok sealing.TipSetToken) (miner.MinerInfo, error) {
 	tsk, err := types.TipSetKeyFromBytes(tok)
 	if err != nil {
@@ -76,6 +80,7 @@ func (s SealingAPIAdapter) StateMinerInfo(ctx context.Context, maddr address.Add
 	return s.delegate.StateMinerInfo(ctx, maddr, tsk)
 }
 
+//
 func (s SealingAPIAdapter) StateMinerWorkerAddress(ctx context.Context, maddr address.Address, tok sealing.TipSetToken) (address.Address, error) {
 	// TODO: update storage-fsm to just StateMinerInfo
 	mi, err := s.StateMinerInfo(ctx, maddr, tok)
@@ -85,6 +90,7 @@ func (s SealingAPIAdapter) StateMinerWorkerAddress(ctx context.Context, maddr ad
 	return mi.Worker, nil
 }
 
+//
 func (s SealingAPIAdapter) StateMinerDeadlines(ctx context.Context, maddr address.Address, tok sealing.TipSetToken) ([]api.Deadline, error) {
 	tsk, err := types.TipSetKeyFromBytes(tok)
 	if err != nil {
@@ -94,6 +100,7 @@ func (s SealingAPIAdapter) StateMinerDeadlines(ctx context.Context, maddr addres
 	return s.delegate.StateMinerDeadlines(ctx, maddr, tsk)
 }
 
+//
 func (s SealingAPIAdapter) StateMinerSectorAllocated(ctx context.Context, maddr address.Address, sid abi.SectorNumber, tok sealing.TipSetToken) (bool, error) {
 	tsk, err := types.TipSetKeyFromBytes(tok)
 	if err != nil {
@@ -103,6 +110,7 @@ func (s SealingAPIAdapter) StateMinerSectorAllocated(ctx context.Context, maddr 
 	return s.delegate.StateMinerSectorAllocated(ctx, maddr, sid, tsk)
 }
 
+//
 func (s SealingAPIAdapter) StateWaitMsg(ctx context.Context, mcid cid.Cid) (sealing.MsgLookup, error) {
 	wmsg, err := s.delegate.StateWaitMsg(ctx, mcid, build.MessageConfidence)
 	if err != nil {
@@ -120,6 +128,7 @@ func (s SealingAPIAdapter) StateWaitMsg(ctx context.Context, mcid cid.Cid) (seal
 	}, nil
 }
 
+//
 func (s SealingAPIAdapter) StateSearchMsg(ctx context.Context, c cid.Cid) (*sealing.MsgLookup, error) {
 	wmsg, err := s.delegate.StateSearchMsg(ctx, c)
 	if err != nil {
@@ -141,6 +150,7 @@ func (s SealingAPIAdapter) StateSearchMsg(ctx context.Context, c cid.Cid) (*seal
 	}, nil
 }
 
+// 计算数据委托
 func (s SealingAPIAdapter) StateComputeDataCommitment(ctx context.Context, maddr address.Address, sectorType abi.RegisteredSealProof, deals []abi.DealID, tok sealing.TipSetToken) (cid.Cid, error) {
 	tsk, err := types.TipSetKeyFromBytes(tok)
 	if err != nil {
@@ -178,6 +188,7 @@ func (s SealingAPIAdapter) StateComputeDataCommitment(ctx context.Context, maddr
 	return cid.Cid(c), nil
 }
 
+// 返回扇区预提交信息
 func (s SealingAPIAdapter) StateSectorPreCommitInfo(ctx context.Context, maddr address.Address, sectorNumber abi.SectorNumber, tok sealing.TipSetToken) (*miner.SectorPreCommitOnChainInfo, error) {
 	tsk, err := types.TipSetKeyFromBytes(tok)
 	if err != nil {
@@ -215,6 +226,7 @@ func (s SealingAPIAdapter) StateSectorPreCommitInfo(ctx context.Context, maddr a
 	return pci, nil
 }
 
+//
 func (s SealingAPIAdapter) StateSectorGetInfo(ctx context.Context, maddr address.Address, sectorNumber abi.SectorNumber, tok sealing.TipSetToken) (*miner.SectorOnChainInfo, error) {
 	tsk, err := types.TipSetKeyFromBytes(tok)
 	if err != nil {
@@ -224,6 +236,7 @@ func (s SealingAPIAdapter) StateSectorGetInfo(ctx context.Context, maddr address
 	return s.delegate.StateSectorGetInfo(ctx, maddr, sectorNumber, tsk)
 }
 
+//
 func (s SealingAPIAdapter) StateSectorPartition(ctx context.Context, maddr address.Address, sectorNumber abi.SectorNumber, tok sealing.TipSetToken) (*sealing.SectorLocation, error) {
 	tsk, err := types.TipSetKeyFromBytes(tok)
 	if err != nil {
@@ -244,6 +257,7 @@ func (s SealingAPIAdapter) StateSectorPartition(ctx context.Context, maddr addre
 	return nil, nil // not found
 }
 
+// 返回存储市场交易合约
 func (s SealingAPIAdapter) StateMarketStorageDeal(ctx context.Context, dealID abi.DealID, tok sealing.TipSetToken) (market.DealProposal, error) {
 	tsk, err := types.TipSetKeyFromBytes(tok)
 	if err != nil {
@@ -258,6 +272,7 @@ func (s SealingAPIAdapter) StateMarketStorageDeal(ctx context.Context, dealID ab
 	return deal.Proposal, nil
 }
 
+// 返回网络版本
 func (s SealingAPIAdapter) StateNetworkVersion(ctx context.Context, tok sealing.TipSetToken) (network.Version, error) {
 	tsk, err := types.TipSetKeyFromBytes(tok)
 	if err != nil {
@@ -267,6 +282,7 @@ func (s SealingAPIAdapter) StateNetworkVersion(ctx context.Context, tok sealing.
 	return s.delegate.StateNetworkVersion(ctx, tsk)
 }
 
+// 发送消息
 func (s SealingAPIAdapter) SendMsg(ctx context.Context, from, to address.Address, method abi.MethodNum, value, maxFee abi.TokenAmount, params []byte) (cid.Cid, error) {
 	msg := types.Message{
 		To:     to,
@@ -284,6 +300,7 @@ func (s SealingAPIAdapter) SendMsg(ctx context.Context, from, to address.Address
 	return smsg.Cid(), nil
 }
 
+// 返回区块头
 func (s SealingAPIAdapter) ChainHead(ctx context.Context) (sealing.TipSetToken, abi.ChainEpoch, error) {
 	head, err := s.delegate.ChainHead(ctx)
 	if err != nil {
@@ -293,6 +310,7 @@ func (s SealingAPIAdapter) ChainHead(ctx context.Context) (sealing.TipSetToken, 
 	return head.Key().Bytes(), head.Height(), nil
 }
 
+//
 func (s SealingAPIAdapter) ChainGetRandomnessFromBeacon(ctx context.Context, tok sealing.TipSetToken, personalization crypto.DomainSeparationTag, randEpoch abi.ChainEpoch, entropy []byte) (abi.Randomness, error) {
 	tsk, err := types.TipSetKeyFromBytes(tok)
 	if err != nil {
@@ -302,6 +320,7 @@ func (s SealingAPIAdapter) ChainGetRandomnessFromBeacon(ctx context.Context, tok
 	return s.delegate.ChainGetRandomnessFromBeacon(ctx, tsk, personalization, randEpoch, entropy)
 }
 
+//
 func (s SealingAPIAdapter) ChainGetRandomnessFromTickets(ctx context.Context, tok sealing.TipSetToken, personalization crypto.DomainSeparationTag, randEpoch abi.ChainEpoch, entropy []byte) (abi.Randomness, error) {
 	tsk, err := types.TipSetKeyFromBytes(tok)
 	if err != nil {
@@ -311,6 +330,7 @@ func (s SealingAPIAdapter) ChainGetRandomnessFromTickets(ctx context.Context, to
 	return s.delegate.ChainGetRandomnessFromTickets(ctx, tsk, personalization, randEpoch, entropy)
 }
 
+//
 func (s SealingAPIAdapter) ChainReadObj(ctx context.Context, ocid cid.Cid) ([]byte, error) {
 	return s.delegate.ChainReadObj(ctx, ocid)
 }

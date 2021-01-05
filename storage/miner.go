@@ -42,19 +42,19 @@ var log = logging.Logger("storageminer")
 
 type Miner struct {
 	// 存储api
-	api     storageMinerApi
+	api storageMinerApi
 	// 小费配置
-	feeCfg  config.MinerFeeConfig
+	feeCfg config.MinerFeeConfig
 	// 主机地址
-	h       host.Host
+	h host.Host
 	// 扇区管理器
-	sealer  sectorstorage.SectorManager
-	// 
-	ds      datastore.Batching
+	sealer sectorstorage.SectorManager
+	// data批量集合
+	ds datastore.Batching
 	// 扇区统计器(用来找到下一个扇区)
-	sc      sealing.SectorIDCounter
+	sc sealing.SectorIDCounter
 	// 验证器
-	verif   ffiwrapper.Verifier
+	verif ffiwrapper.Verifier
 	// 地址选择器
 	addrSel *AddressSelector
 	// 地址(实际为struct包一层string)
@@ -62,10 +62,10 @@ type Miner struct {
 	// 获得密封配置函数
 	getSealConfig dtypes.GetSealingConfigFunc
 	// 密封器
-	sealing       *sealing.Sealing
-	// 
+	sealing *sealing.Sealing
+	//
 	sealingEvtType journal.EventType
-	// 
+	//
 	journal journal.Journal
 }
 
@@ -75,16 +75,16 @@ type SealingStateEvt struct {
 	// 扇区号
 	SectorNumber abi.SectorNumber
 	// 密封证明协议类型
-	SectorType   abi.RegisteredSealProof
+	SectorType abi.RegisteredSealProof
 	// 扇区状态(变更前)
-	From         sealing.SectorState
+	From sealing.SectorState
 	// 扇区状态(变更后)
-	After        sealing.SectorState
+	After sealing.SectorState
 	// 错误信息
-	Error        string
+	Error string
 }
 
-// 矿机存储api
+// 矿机存储api接口
 type storageMinerApi interface {
 	// Call a read only method on actors (no interaction with the chain required)
 	StateCall(context.Context, *types.Message, types.TipSetKey) (*api.InvocResult, error)
@@ -164,8 +164,8 @@ func (m *Miner) Run(ctx context.Context) error {
 	}
 
 	fc := sealing.FeeConfig{
-		MaxPreCommitGasFee: abi.TokenAmount(m.feeCfg.MaxPreCommitGasFee), 	// 每次提交时产生的gas费用
-		MaxCommitGasFee:    abi.TokenAmount(m.feeCfg.MaxCommitGasFee), 		// 最大提交gas费用
+		MaxPreCommitGasFee: abi.TokenAmount(m.feeCfg.MaxPreCommitGasFee), // 每次提交时产生的gas费用
+		MaxCommitGasFee:    abi.TokenAmount(m.feeCfg.MaxCommitGasFee),    // 最大提交gas费用
 	}
 
 	evts := events.NewEvents(ctx, m.api)
@@ -234,6 +234,7 @@ type StorageWpp struct {
 	winnRpt  abi.RegisteredPoStProof
 }
 
+// ???
 func NewWinningPoStProver(api api.FullNode, prover storage.Prover, verifier ffiwrapper.Verifier, miner dtypes.MinerID) (*StorageWpp, error) {
 	ma, err := address.NewIDAddress(uint64(miner))
 	if err != nil {

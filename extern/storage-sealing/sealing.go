@@ -259,6 +259,7 @@ func (m *Sealing) addPiece(ctx context.Context, sectorID abi.SectorNumber, size 
 	return nil
 }
 
+// 发送扇区删除信号
 func (m *Sealing) Remove(ctx context.Context, sid abi.SectorNumber) error {
 	return m.sectors.Send(uint64(sid), SectorRemove{})
 }

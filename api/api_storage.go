@@ -214,9 +214,9 @@ type SectorState string
 type AddrUse int
 
 const (
-	PreCommitAddr AddrUse = iota
-	CommitAddr
-	PoStAddr
+	PreCommitAddr AddrUse = iota // 0, 预提交地址
+	CommitAddr                   // 1, 提交地址
+	PoStAddr                     // 2, post地址
 )
 
 type AddressConfig struct {

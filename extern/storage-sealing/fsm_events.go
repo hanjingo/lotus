@@ -43,6 +43,7 @@ func (evt SectorFatalError) applyGlobal(state *SectorInfo) bool {
 	return true
 }
 
+// 扇区状态机
 type SectorForceState struct {
 	State SectorState
 }

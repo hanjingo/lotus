@@ -2,37 +2,38 @@ package sealing
 
 type SectorState string
 
+// 扇区状态机
 var ExistSectorStateList = map[SectorState]struct{}{
-	Empty:                {},
-	WaitDeals:            {},
-	Packing:              {},
-	GetTicket:            {},
-	PreCommit1:           {},
-	PreCommit2:           {},
-	PreCommitting:        {},
-	PreCommitWait:        {},
-	WaitSeed:             {},
-	Committing:           {},
-	SubmitCommit:         {},
-	CommitWait:           {},
-	FinalizeSector:       {},
-	Proving:              {},
-	FailedUnrecoverable:  {},
-	SealPreCommit1Failed: {},
-	SealPreCommit2Failed: {},
-	PreCommitFailed:      {},
-	ComputeProofFailed:   {},
-	CommitFailed:         {},
-	PackingFailed:        {},
-	FinalizeFailed:       {},
-	DealsExpired:         {},
-	RecoverDealIDs:       {},
-	Faulty:               {},
-	FaultReported:        {},
-	FaultedFinal:         {},
-	Removing:             {},
-	RemoveFailed:         {},
-	Removed:              {},
+	Empty:                {}, // 空,
+	WaitDeals:            {}, // 待交易
+	Packing:              {}, // 打包中
+	GetTicket:            {}, // ？？？
+	PreCommit1:           {}, // 预提交1
+	PreCommit2:           {}, // 预提交2
+	PreCommitting:        {}, // 正在预提交
+	PreCommitWait:        {}, // 预提交等待
+	WaitSeed:             {}, // ？？？
+	Committing:           {}, // 提交中
+	SubmitCommit:         {}, // 接受提交
+	CommitWait:           {}, // ???
+	FinalizeSector:       {}, // 固定扇区
+	Proving:              {}, // 证明
+	FailedUnrecoverable:  {}, // 无法恢复
+	SealPreCommit1Failed: {}, // 密封预提交1失败
+	SealPreCommit2Failed: {}, // 密封预提交2失败
+	PreCommitFailed:      {}, // 预提交失败
+	ComputeProofFailed:   {}, // 计算证明失败
+	CommitFailed:         {}, // 提交失败
+	PackingFailed:        {}, // 打包失败
+	FinalizeFailed:       {}, // 固定扇区失败
+	DealsExpired:         {}, // 交易超时
+	RecoverDealIDs:       {}, // 恢复交易id
+	Faulty:               {}, // 有bug
+	FaultReported:        {}, // bug已上报
+	FaultedFinal:         {}, // bug修复
+	Removing:             {}, // 删除中
+	RemoveFailed:         {}, // 删除失败
+	Removed:              {}, // 已删除
 }
 
 const (

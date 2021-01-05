@@ -17,10 +17,11 @@ import (
 
 var log = logging.Logger("types")
 
+// 标签集合; 允许同一个高度有多个区块
 type TipSet struct {
-	cids   []cid.Cid
-	blks   []*BlockHeader
-	height abi.ChainEpoch
+	cids   []cid.Cid      // id
+	blks   []*BlockHeader // 多个区块头
+	height abi.ChainEpoch // 区块高度
 }
 
 type ExpTipSet struct {

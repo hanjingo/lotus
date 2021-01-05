@@ -52,10 +52,11 @@ func DsKeyToDealID(key datastore.Key) (uint64, error) {
 type SectorBlocks struct {
 	*storage.Miner // 矿机
 
-	keys  datastore.Batching // key集合
+	keys  datastore.Batching // 引用集合
 	keyLk sync.Mutex
 }
 
+// 新建扇区块容器
 func NewSectorBlocks(miner *storage.Miner, ds dtypes.MetadataDS) *SectorBlocks {
 	sbc := &SectorBlocks{
 		Miner: miner,
@@ -65,6 +66,7 @@ func NewSectorBlocks(miner *storage.Miner, ds dtypes.MetadataDS) *SectorBlocks {
 	return sbc
 }
 
+// 将引用写入的引用集合
 func (st *SectorBlocks) writeRef(dealID abi.DealID, sectorID abi.SectorNumber, offset abi.PaddedPieceSize, size abi.UnpaddedPieceSize) error {
 	st.keyLk.Lock() // TODO: make this multithreaded
 	defer st.keyLk.Unlock()
@@ -79,7 +81,7 @@ func (st *SectorBlocks) writeRef(dealID abi.DealID, sectorID abi.SectorNumber, o
 
 	var refs api.SealedRefs
 	if len(v) > 0 {
-		if err := cborutil.ReadCborRPC(bytes.NewReader(v), &refs); err != nil {
+		if err := cborutil.ReadCborRPC(bytes.NewReader(v), &refs); err != nil { // 序列化
 			return xerrors.Errorf("decoding existing refs: %w", err)
 		}
 	}
@@ -97,8 +99,9 @@ func (st *SectorBlocks) writeRef(dealID abi.DealID, sectorID abi.SectorNumber, o
 	return st.keys.Put(DealIDToDsKey(dealID), newRef) // TODO: batch somehow
 }
 
+// 添加块
 func (st *SectorBlocks) AddPiece(ctx context.Context, size abi.UnpaddedPieceSize, r io.Reader, d sealing.DealInfo) (abi.SectorNumber, abi.PaddedPieceSize, error) {
-	sn, offset, err := st.Miner.AddPieceToAnySector(ctx, size, r, d)
+	sn, offset, err := st.Miner.AddPieceToAnySector(ctx, size, r, d) // 查找合适的块并添加
 	if err != nil {
 		return 0, 0, err
 	}
@@ -112,6 +115,7 @@ func (st *SectorBlocks) AddPiece(ctx context.Context, size abi.UnpaddedPieceSize
 	return sn, offset, nil
 }
 
+// 列出所有密封的引用
 func (st *SectorBlocks) List() (map[uint64][]api.SealedRef, error) {
 	res, err := st.keys.Query(query.Query{})
 	if err != nil {
@@ -125,7 +129,7 @@ func (st *SectorBlocks) List() (map[uint64][]api.SealedRef, error) {
 
 	out := map[uint64][]api.SealedRef{}
 	for _, ent := range ents {
-		dealID, err := DsKeyToDealID(datastore.RawKey(ent.Key))
+		dealID, err := DsKeyToDealID(datastore.RawKey(ent.Key)) // 算交易id
 		if err != nil {
 			return nil, err
 		}
@@ -141,6 +145,7 @@ func (st *SectorBlocks) List() (map[uint64][]api.SealedRef, error) {
 	return out, nil
 }
 
+// 根据交易id拿到所有密封的引用 dealID:交易id
 func (st *SectorBlocks) GetRefs(dealID abi.DealID) ([]api.SealedRef, error) { // TODO: track local sectors
 	ent, err := st.keys.Get(DealIDToDsKey(dealID))
 	if err == datastore.ErrNotFound {
@@ -158,6 +163,7 @@ func (st *SectorBlocks) GetRefs(dealID abi.DealID) ([]api.SealedRef, error) { //
 	return refs.Refs, nil
 }
 
+// 根据交易id拿第一个密封的未填充的大小
 func (st *SectorBlocks) GetSize(dealID abi.DealID) (uint64, error) {
 	refs, err := st.GetRefs(dealID)
 	if err != nil {
@@ -167,6 +173,7 @@ func (st *SectorBlocks) GetSize(dealID abi.DealID) (uint64, error) {
 	return uint64(refs[0].Size), nil
 }
 
+// 交易id是否存在
 func (st *SectorBlocks) Has(dealID abi.DealID) (bool, error) {
 	// TODO: ensure sector is still there
 	return st.keys.Has(DealIDToDsKey(dealID))

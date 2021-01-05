@@ -455,6 +455,7 @@ func (m *Sealing) restartSectors(ctx context.Context) error {
 	return nil
 }
 
+// 扇区状态更新
 func (m *Sealing) ForceSectorState(ctx context.Context, id abi.SectorNumber, state SectorState) error {
 	return m.sectors.Send(id, SectorForceState{state})
 }

@@ -28,6 +28,7 @@ func init() {
 // The CIDs are assumed to be distinct and in canonical order. Two keys with the same
 // CIDs in a different order are not considered equal.
 // TipSetKey is a lightweight value type, and may be compared for equality with ==.
+// CID的格式化字符串
 type TipSetKey struct {
 	// The internal representation is a concatenation of the bytes of the CIDs, which are
 	// self-describing, wrapped as a string.
