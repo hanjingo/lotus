@@ -32,12 +32,12 @@ type proveRes struct {
 	err   error
 }
 
-type postStatus string
+type postStatus string // 时空证明状态
 
 const (
-	postStatusStart    postStatus = "postStatusStart"
-	postStatusProving  postStatus = "postStatusProving"
-	postStatusComplete postStatus = "postStatusComplete"
+	postStatusStart    postStatus = "postStatusStart"    // 开始证明
+	postStatusProving  postStatus = "postStatusProving"  // 正在证明
+	postStatusComplete postStatus = "postStatusComplete" // 证明完成
 )
 
 type mockAPI struct {

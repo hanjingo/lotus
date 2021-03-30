@@ -30,6 +30,7 @@ import (
 	"github.com/filecoin-project/lotus/chain/types"
 )
 
+// 时空证明失败
 func (s *WindowPoStScheduler) failPost(err error, ts *types.TipSet, deadline *dline.Info) {
 	s.journal.RecordEvent(s.evtTypes[evtTypeWdPoStScheduler], func() interface{} {
 		c := evtCommon{Error: err}
@@ -54,6 +55,7 @@ func (s *WindowPoStScheduler) failPost(err error, ts *types.TipSet, deadline *dl
 
 // recordProofsEvent records a successful proofs_processed event in the
 // journal, even if it was a noop (no partitions).
+// 记录证明事件
 func (s *WindowPoStScheduler) recordProofsEvent(partitions []miner.PoStPartition, mcid cid.Cid) {
 	s.journal.RecordEvent(s.evtTypes[evtTypeWdPoStProofs], func() interface{} {
 		return &WdPoStProofsProcessedEvt{
@@ -65,6 +67,7 @@ func (s *WindowPoStScheduler) recordProofsEvent(partitions []miner.PoStPartition
 }
 
 // startGeneratePoST kicks off the process of generating a PoST
+// 开始产生证明
 func (s *WindowPoStScheduler) startGeneratePoST(
 	ctx context.Context,
 	ts *types.TipSet,
@@ -90,6 +93,7 @@ func (s *WindowPoStScheduler) startGeneratePoST(
 }
 
 // runGeneratePoST generates the PoST
+//
 func (s *WindowPoStScheduler) runGeneratePoST(
 	ctx context.Context,
 	ts *types.TipSet,

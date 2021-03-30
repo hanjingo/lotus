@@ -1,3 +1,4 @@
+// post: 时空证明
 package storage
 
 import (
@@ -36,10 +37,10 @@ type changeHandlerAPI interface {
 
 // 矿机状态变更回调
 type changeHandler struct {
-	api        changeHandlerAPI
-	actor      address.Address
-	proveHdlr  *proveHandler
-	submitHdlr *submitHandler
+	api        changeHandlerAPI // api
+	actor      address.Address  // 调用人
+	proveHdlr  *proveHandler    // 签名器
+	submitHdlr *submitHandler   // 订阅回调
 }
 
 func newChangeHandler(api changeHandlerAPI, actor address.Address) *changeHandler {
@@ -72,7 +73,7 @@ func (ch *changeHandler) update(ctx context.Context, revert *types.TipSet, advan
 		advance: advance,
 		di:      di,
 	}
-	// 为什么要select 2次?
+	// 为什么要select 2次? proveHdlr->submitHdr
 	select {
 	case ch.proveHdlr.hcs <- hc:
 	case <-ch.proveHdlr.shutdownCtx.Done():
@@ -135,18 +136,21 @@ func (c *postsCache) get(di *dline.Info) ([]miner.SubmitWindowedPoStParams, bool
 	return posts, ok
 }
 
+// 区块头变更
 type headChange struct {
 	ctx     context.Context
-	revert  *types.TipSet
-	advance *types.TipSet
+	revert  *types.TipSet // 还原集合
+	advance *types.TipSet // 进度集合
 	di      *dline.Info
 }
 
+// 当前Post
 type currentPost struct {
 	di    *dline.Info
 	abort context.CancelFunc
 }
 
+// Post结果
 type postResult struct {
 	ts       *types.TipSet
 	currPost *currentPost
@@ -154,7 +158,7 @@ type postResult struct {
 	err      error
 }
 
-// proveHandler generates proofs
+// 证明产生器
 type proveHandler struct {
 	api   changeHandlerAPI
 	posts *postsCache
@@ -243,7 +247,7 @@ func (p *proveHandler) processHeadChange(ctx context.Context, newTS *types.TipSe
 	}
 
 	// Check if the chain is above the Challenge height for the post window
-	if newTS.Height() < di.Challenge {
+	if newTS.Height() < di.Challenge { // 高度落后
 		return
 	}
 
@@ -254,6 +258,7 @@ func (p *proveHandler) processHeadChange(ctx context.Context, newTS *types.TipSe
 	})
 }
 
+// 处理回调结果
 func (p *proveHandler) processPostResult(res *postResult) {
 	di := res.currPost.di
 	if res.err != nil {
@@ -278,6 +283,7 @@ func (p *proveHandler) processPostResult(res *postResult) {
 	p.posts.add(di, res.posts)
 }
 
+// 提交结果
 type submitResult struct {
 	pw  *postWindow
 	err error
@@ -286,18 +292,20 @@ type submitResult struct {
 type SubmitState string
 
 const (
-	SubmitStateStart      SubmitState = "SubmitStateStart"
-	SubmitStateSubmitting SubmitState = "SubmitStateSubmitting"
-	SubmitStateComplete   SubmitState = "SubmitStateComplete"
+	SubmitStateStart      SubmitState = "SubmitStateStart"      // 开始订阅
+	SubmitStateSubmitting SubmitState = "SubmitStateSubmitting" // 正在订阅
+	SubmitStateComplete   SubmitState = "SubmitStateComplete"   // 订阅结束
 )
 
+// 审查/处罚机制
 type postWindow struct {
-	ts          *types.TipSet
-	di          *dline.Info
-	submitState SubmitState
-	abort       context.CancelFunc
+	ts          *types.TipSet      // tip集合
+	di          *dline.Info        // 到期信息
+	submitState SubmitState        // 提交状态
+	abort       context.CancelFunc // 取消函数
 }
 
+// post内容
 type postInfo struct {
 	di    *dline.Info
 	posts []miner.SubmitWindowedPoStParams
@@ -358,35 +366,35 @@ func (s *submitHandler) run() {
 
 	for s.shutdownCtx.Err() == nil {
 		select {
-		case <-s.shutdownCtx.Done():
+		case <-s.shutdownCtx.Done(): // 关机
 			return
 
-		case hc := <-s.hcs:
+		case hc := <-s.hcs: // 区块头变更
 			// Head change
 			s.processHeadChange(hc.ctx, hc.revert, hc.advance, hc.di)
 			if s.processedHeadChanges != nil {
 				s.processedHeadChanges <- hc
 			}
 
-		case pi := <-s.posts.added:
+		case pi := <-s.posts.added: // post缓存器，已添加的任务
 			// Proof generated
 			s.processPostReady(pi)
 			if s.processedPostReady != nil {
 				s.processedPostReady <- pi
 			}
 
-		case res := <-s.submitResults:
+		case res := <-s.submitResults: // 订阅结果
 			// Submit complete
 			s.processSubmitResult(res)
 			if s.processedSubmitResults != nil {
 				s.processedSubmitResults <- res
 			}
 
-		case pwreq := <-s.getPostWindowReqs:
+		case pwreq := <-s.getPostWindowReqs: // 审查处罚机制
 			// used by getPostWindow() to sync with run loop
 			pwreq.out <- s.postWindows[pwreq.di.Open]
 
-		case out := <-s.getTSDIReq:
+		case out := <-s.getTSDIReq: //
 			// used by currentTSDI() to sync with run loop
 			out <- &tsdi{ts: s.currentTS, di: s.currentDI}
 		}

@@ -63,7 +63,7 @@ type Miner struct {
 	getSealConfig dtypes.GetSealingConfigFunc
 	// 密封器
 	sealing *sealing.Sealing
-	//
+	// 密封器事件类型
 	sealingEvtType journal.EventType
 	//
 	journal journal.Journal
@@ -87,7 +87,7 @@ type SealingStateEvt struct {
 // 矿机存储api接口
 type storageMinerApi interface {
 	// Call a read only method on actors (no interaction with the chain required)
-	StateCall(context.Context, *types.Message, types.TipSetKey) (*api.InvocResult, error)
+	StateCall(context.Context, *types.Message, types.TipSetKey) (*api.InvocResult, error) // 状态回调
 	StateMinerSectors(context.Context, address.Address, *bitfield.BitField, types.TipSetKey) ([]*miner.SectorOnChainInfo, error)
 	StateSectorPreCommitInfo(context.Context, address.Address, abi.SectorNumber, types.TipSetKey) (miner.SectorPreCommitOnChainInfo, error)
 	StateSectorGetInfo(context.Context, address.Address, abi.SectorNumber, types.TipSetKey) (*miner.SectorOnChainInfo, error)
@@ -127,7 +127,7 @@ type storageMinerApi interface {
 	ChainGetTipSet(ctx context.Context, key types.TipSetKey) (*types.TipSet, error)
 
 	WalletSign(context.Context, address.Address, []byte) (*crypto.Signature, error)
-	WalletBalance(context.Context, address.Address) (types.BigInt, error)
+	WalletBalance(context.Context, address.Address) (types.BigInt, error) // 返回钱包余额
 	WalletHas(context.Context, address.Address) (bool, error)
 }
 
@@ -234,7 +234,7 @@ type StorageWpp struct {
 	winnRpt  abi.RegisteredPoStProof
 }
 
-// ???
+// 新建出块证明
 func NewWinningPoStProver(api api.FullNode, prover storage.Prover, verifier ffiwrapper.Verifier, miner dtypes.MinerID) (*StorageWpp, error) {
 	ma, err := address.NewIDAddress(uint64(miner))
 	if err != nil {

@@ -13,7 +13,7 @@ import (
 
 // 地址选择器api接口
 type addrSelectApi interface {
-	// 钱包负载均衡
+	// 钱包余额
 	WalletBalance(context.Context, address.Address) (types.BigInt, error)
 	// 钱包是否存在
 	WalletHas(context.Context, address.Address) (bool, error)
@@ -28,7 +28,7 @@ type AddressSelector struct {
 	api.AddressConfig
 }
 
-// 根据地址类型选择post地址 a:地址选择api, mi:矿机信息, use:地址类型, goodFunds:, minFunds:
+// 根据地址类型选择时空证明地址 a:地址选择api, mi:矿机信息, use:地址类型, goodFunds:, minFunds:
 func (as *AddressSelector) AddressFor(ctx context.Context, a addrSelectApi, mi miner.MinerInfo, use api.AddrUse, goodFunds, minFunds abi.TokenAmount) (address.Address, abi.TokenAmount, error) {
 	var addrs []address.Address
 	switch use {
@@ -36,9 +36,9 @@ func (as *AddressSelector) AddressFor(ctx context.Context, a addrSelectApi, mi m
 		addrs = append(addrs, as.PreCommitControl...)
 	case api.CommitAddr: // 1, 提交地址
 		addrs = append(addrs, as.CommitControl...)
-	default: // 2... post地址
+	default: // 2... 时空证明地址
 		defaultCtl := map[address.Address]struct{}{}
-		for _, a := range mi.ControlAddresses { // post地址
+		for _, a := range mi.ControlAddresses { // 时空证明地址
 			defaultCtl[a] = struct{}{}
 		}
 		delete(defaultCtl, mi.Owner)  // 排除 owner地址

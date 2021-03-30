@@ -22,20 +22,21 @@ import (
 	"go.opencensus.io/trace"
 )
 
+// 时空证明调度器,侦听链上的状态
 type WindowPoStScheduler struct {
-	api              storageMinerApi
-	feeCfg           config.MinerFeeConfig
-	addrSel          *AddressSelector
-	prover           storage.Prover
-	faultTracker     sectorstorage.FaultTracker
-	proofType        abi.RegisteredPoStProof
-	partitionSectors uint64
-	ch               *changeHandler
+	api              storageMinerApi            // 矿机存储api
+	feeCfg           config.MinerFeeConfig      // 小费配置
+	addrSel          *AddressSelector           // 地址选择器
+	prover           storage.Prover             // 证明器
+	faultTracker     sectorstorage.FaultTracker // 错误追踪器
+	proofType        abi.RegisteredPoStProof    // 证明类型
+	partitionSectors uint64                     // 扇区分割
+	ch               *changeHandler             // ??
 
-	actor address.Address
+	actor address.Address // 部署者??地址
 
-	evtTypes [4]journal.EventType
-	journal  journal.Journal
+	evtTypes [4]journal.EventType // 日志事件集合
+	journal  journal.Journal      // 日志记录器
 
 	// failed abi.ChainEpoch // eps
 	// failLk sync.Mutex
@@ -103,7 +104,7 @@ func (s *WindowPoStScheduler) Run(ctx context.Context) {
 		}
 
 		select {
-		case changes, ok := <-notifs:
+		case changes, ok := <-notifs: // 通知信息
 			if !ok {
 				log.Warn("window post scheduler notifs channel closed")
 				notifs = nil

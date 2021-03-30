@@ -36,7 +36,7 @@ func (m *Miner) GetSectorInfo(sid abi.SectorNumber) (sealing.SectorInfo, error) 
 	return m.sealing.GetSectorInfo(sid)
 }
 
-// ???
+// 质押扇区
 func (m *Miner) PledgeSector() error {
 	return m.sealing.PledgeSector()
 }
